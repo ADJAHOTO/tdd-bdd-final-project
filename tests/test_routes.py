@@ -27,6 +27,7 @@ Test cases can be run with the following:
 import os
 import logging
 from decimal import Decimal
+from urllib.parse import quote_plus
 from unittest import TestCase
 from service import app
 from service.common import status
@@ -229,6 +230,11 @@ class TestProductRoutes(TestCase):
         response = self.client.get(f"{BASE_URL}/{test_product.id}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_delete_product_not_found(self):
+        """It should not Delete a Product thats not found"""
+        response = self.client.delete(f"{BASE_URL}/0")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
     # ----------------------------------------------------------
     # TEST LIST ALL
     # ----------------------------------------------------------
@@ -250,7 +256,7 @@ class TestProductRoutes(TestCase):
         self._create_products(5)
         products = self.client.get(BASE_URL).get_json()
         name = products[0]["name"]
-        response = self.client.get(f"{BASE_URL}?name={name}")
+        response = self.client.get(f"{BASE_URL}?name={quote_plus(name)}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
         self.assertGreaterEqual(len(data), 1)
@@ -280,7 +286,9 @@ class TestProductRoutes(TestCase):
         self._create_products(10)
         products = self.client.get(BASE_URL).get_json()
         available = products[0]["available"]
-        response = self.client.get(f"{BASE_URL}?available={str(available).lower()}")
+        response = self.client.get(
+            f"{BASE_URL}?available={str(available).lower()}"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
         self.assertGreaterEqual(len(data), 1)
